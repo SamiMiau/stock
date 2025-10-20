@@ -42,6 +42,10 @@ CREATE TABLE IF NOT EXISTS products (
     -- Moneda del producto
     currency_id INT NOT NULL,
 
+    -- Descripción del producto
+    description TEXT NOT NULL
+        CHECK (LENGTH(description) BETWEEN 10 AND 1000),
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (currency_id)

@@ -53,11 +53,27 @@ try {
         }
     }
 
+    // Insert materials
+    $insertMaterial = $pdo->prepare("INSERT INTO materials (code, description) VALUES (:code, :desc)
+        ON CONFLICT (code) DO NOTHING");
+    
+    $materials = [
+        ['code' => 'PLAS01', 'desc' => 'Plastico'],
+        ['code' => 'META01', 'desc' => 'Metal'],
+        ['code' => 'MADE01', 'desc' => 'Madera'],
+        ['code' => 'VIDR01', 'desc' => 'Vidrio'],
+        ['code' => 'TEXT01', 'desc' => 'Textil'],
+    ];
+    
+    foreach ($materials as $material) {
+        $insertMaterial->execute([':code' => $material['code'], ':desc' => $material['desc']]);
+    }
+
     $pdo->commit();
 
     echo json_encode([
         'success' => true,
-        'message' => 'Datos de prueba insertados: currencies, warehouses y branches'
+        'message' => 'Datos de prueba insertados: currencies, warehouses, branches y materials'
     ]);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {

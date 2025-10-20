@@ -7,28 +7,28 @@
 </head>
 <body>
   <div class="container">
-    <h1>Registrar Producto</h1>
+    <h1>Formulario de Producto</h1>
 
     <form id="productForm">
       <div class="form-grid">
         <div class="form-col-left">
           <div class="form-group">
-            <label for="code">Código del Producto *</label>
-            <input type="text" id="code" name="code" required>
+            <label for="code">Código</label>
+            <input type="text" id="code" name="code">
             <span class="error" id="code-error"></span>
           </div>
 
           <div class="form-group">
-            <label for="warehouse">Bodega *</label>
-            <select id="warehouse" name="warehouse" required>
+            <label for="warehouse">Bodega</label>
+            <select id="warehouse" name="warehouse">
               <option value=""></option>
             </select>
             <span class="error" id="warehouse-error"></span>
           </div>
 
           <div class="form-group">
-            <label for="currency">Moneda *</label>
-            <select id="currency" name="currency" required>
+            <label for="currency">Moneda</label>
+            <select id="currency" name="currency">
               <option value=""></option>
             </select>
             <span class="error" id="currency-error"></span>
@@ -37,29 +37,29 @@
 
         <div class="form-col-right">
           <div class="form-group">
-            <label for="name">Nombre del Producto *</label>
-            <input type="text" id="name" name="name" required>
+            <label for="name">Nombre</label>
+            <input type="text" id="name" name="name">
             <span class="error" id="name-error"></span>
           </div>
 
           <div class="form-group">
-            <label for="branch">Sucursal *</label>
-            <select id="branch" name="branch" required disabled>
+            <label for="branch">Sucursal</label>
+            <select id="branch" name="branch" disabled>
               <option value=""></option>
             </select>
             <span class="error" id="branch-error"></span>
           </div>
 
           <div class="form-group">
-            <label for="price">Precio *</label>
-            <input type="text" id="price" name="price" required>
+            <label for="price">Precio</label>
+            <input type="text" id="price" name="price">
             <span class="error" id="price-error"></span>
           </div>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Material del Producto * (seleccione al menos 2)</label>
+        <label>Material del Producto</label>
         <div id="materials-container">
           <span class="loading">Cargando materiales...</span>
         </div>
@@ -67,12 +67,12 @@
       </div>
 
       <div class="form-group">
-        <label for="description">Descripción del Producto *</label>
-        <textarea id="description" name="description" rows="4" required></textarea>
+        <label for="description">Descripción</label>
+        <textarea id="description" name="description" rows="4"></textarea>
         <span class="error" id="description-error"></span>
       </div>
 
-      <button type="submit">Registrar Producto</button>
+      <button type="submit">Guardar Producto</button>
     </form>
 
     <div id="message"></div>

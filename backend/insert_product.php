@@ -17,7 +17,7 @@ $currencyId = isset($data['currency_id']) ? (int)$data['currency_id'] : 0;
 // Validaciones según la estructura de create_tables.sql
 $errors = [];
 
-// code: 5-15 chars, alfanumérico, al menos una letra y un número
+// code: 5-15 chars, alfanumérico y debe contener al menos una letra y un número
 if ($code === ''
     || strlen($code) < 5
     || strlen($code) > 15
@@ -25,7 +25,7 @@ if ($code === ''
     || !preg_match('/[A-Za-z]/', $code)
     || !preg_match('/[0-9]/', $code)
 ) {
-    $errors[] = 'Código inválido: 5-15 caracteres, alfanumérico, debe incluir letra y número';
+    $errors[] = 'Código inválido: 5-15 caracteres, alfanumérico y debe incluir letra y número';
 }
 
 // name: 2-50 chars
@@ -44,6 +44,14 @@ if (!empty($errors)) {
 }
 
 try {
+    // Pre-insert uniqueness check for product code
+    $stmt = $pdo->prepare("SELECT 1 FROM products WHERE code = :code LIMIT 1");
+    $stmt->execute([':code' => $code]);
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'error' => 'El código ya existe']);
+        exit;
+    }
+
     // Validar currency existente
     if ($currencyId <= 0) {
         echo json_encode(['success' => false, 'error' => 'Moneda inválida']);

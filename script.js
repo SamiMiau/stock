@@ -89,12 +89,10 @@ function renderMaterials() {
     materials.forEach(material => {
         const checkboxItem = document.createElement('div');
         checkboxItem.className = 'checkbox-item';
-        
         checkboxItem.innerHTML = `
             <input type="checkbox" id="material-${material.id}" value="${material.id}" name="materials">
-            <label for="material-${material.id}">${material.description} (${material.code})</label>
+            <label for="material-${material.id}">${material.description}</label>
         `;
-        
         checkboxGroup.appendChild(checkboxItem);
     });
     
@@ -136,11 +134,7 @@ function setupEventListeners() {
     form.addEventListener('submit', handleFormSubmit);
     warehouseSelect.addEventListener('change', handleWarehouseChange);
     
-    // Real-time validation
-    document.getElementById('code').addEventListener('blur', validateCode);
-    document.getElementById('name').addEventListener('blur', validateName);
-    document.getElementById('price').addEventListener('blur', validatePrice);
-    document.getElementById('description').addEventListener('blur', validateDescription);
+    // Real-time validation removed - alerts only on form submission
 }
 
 // Handle warehouse selection change
@@ -185,11 +179,38 @@ async function handleWarehouseChange() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    // Validate form first
     if (!validateForm()) {
         return;
     }
     
+	// Ensure code is unique before submitting
+	const codeValue = document.getElementById('code').value.trim();
+	try {
+		const uniqueResp = await fetch(`backend/check_code.php?code=${encodeURIComponent(codeValue)}`);
+		const uniqueData = await uniqueResp.json();
+		if (!uniqueData.success) {
+			showFieldError('code', 'Error verificando código: ' + (uniqueData.error || 'desconocido'));
+			return;
+		}
+		if (!uniqueData.available) {
+			showFieldError('code', 'Este código ya existe');
+			alert('El código del producto ya está registrado.');
+			const codeInput = document.getElementById('code');
+			if (codeInput) codeInput.focus();
+			return;
+		}
+	} catch (err) {
+		showFieldError('code', 'Error verificando código: ' + err.message);
+		return;
+	}
+	
     const formData = getFormData();
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    
+    // Disable submit button to prevent double submission
+    submitButton.disabled = true;
+    submitButton.textContent = 'Guardando...';
     
     try {
         // First, create the product
@@ -201,15 +222,27 @@ async function handleFormSubmit(e) {
             body: JSON.stringify({
                 code: formData.code,
                 name: formData.name,
-                price: formData.price
+                price: formData.price,
+                currency_id: formData.currency
             })
         });
         
-        const productResult = await productResponse.json();
-        
-        if (!productResult.success) {
-            throw new Error(productResult.error || 'Error creando producto');
+        if (!productResponse.ok) {
+            throw new Error(`Error del servidor: ${productResponse.status}`);
         }
+        
+		const productResult = await productResponse.json();
+		
+		if (!productResult.success) {
+			const errMsg = productResult.error || 'Error creando producto';
+			// If backend reports duplicate code, show the required alert and stop
+			if (/c[oó]digo ya existe/i.test(errMsg) || /duplicate key|unique constraint/i.test(errMsg)) {
+				showFieldError('code', 'Este código ya existe');
+				alert('El código del producto ya está registrado.');
+				return;
+			}
+			throw new Error(errMsg);
+		}
         
         // Then, associate materials
         if (formData.materials.length > 0) {
@@ -224,21 +257,50 @@ async function handleFormSubmit(e) {
                 })
             });
             
+            if (!materialsResponse.ok) {
+                throw new Error(`Error del servidor: ${materialsResponse.status}`);
+            }
+            
             const materialsResult = await materialsResponse.json();
             
             if (!materialsResult.success) {
                 console.warn('Producto creado pero error asociando materiales:', materialsResult.error);
+                showMessage('Producto creado pero hubo problemas asociando materiales', 'error');
+                return;
             }
         }
         
+        // Success!
         showMessage('Producto registrado exitosamente', 'success');
-        form.reset();
-        document.getElementById('branch').disabled = true;
-        document.getElementById('branch').innerHTML = '<option value=""></option>';
+        resetForm();
         
-    } catch (error) {
-        showMessage('Error: ' + error.message, 'error');
+	} catch (error) {
+		console.error('Error:', error);
+		if (/c[oó]digo ya existe/i.test(error.message) || /duplicate key|unique constraint/i.test(error.message)) {
+			showFieldError('code', 'Este código ya existe');
+			alert('El código del producto ya está registrado.');
+		} else {
+			showMessage('Error: ' + error.message, 'error');
+		}
+	} finally {
+        // Re-enable submit button
+        submitButton.disabled = false;
+        submitButton.textContent = 'Guardar Producto';
     }
+}
+
+// Reset form after successful submission
+function resetForm() {
+    const form = document.getElementById('productForm');
+    form.reset();
+    
+    // Reset branch select
+    const branchSelect = document.getElementById('branch');
+    branchSelect.disabled = true;
+    branchSelect.innerHTML = '<option value=""></option>';
+    
+    // Clear all error states
+    clearAllFieldErrors();
 }
 
 // Get form data
@@ -261,21 +323,79 @@ function getFormData() {
 // Validate entire form
 function validateForm() {
     let isValid = true;
+    let errorMessages = [];
     
-    isValid &= validateCode();
-    isValid &= validateName();
-    isValid &= validateWarehouse();
-    isValid &= validateBranch();
-    isValid &= validateCurrency();
-    isValid &= validatePrice();
-    isValid &= validateMaterials();
-    isValid &= validateDescription();
+    // Clear all previous errors
+    clearAllFieldErrors();
+    
+    // Validate each field
+    if (!validateName()) {
+        isValid = false;
+        errorMessages.push('• Nombre del producto');
+    }
+    
+    if (!validateWarehouse()) {
+        isValid = false;
+        errorMessages.push('• Bodega');
+    }
+    
+    if (!validateBranch()) {
+        isValid = false;
+        errorMessages.push('• Sucursal');
+    }
+    
+    if (!validateCurrency()) {
+        isValid = false;
+        errorMessages.push('• Moneda');
+    }
+    
+    if (!validatePrice()) {
+        isValid = false;
+        errorMessages.push('• Precio');
+    }
+    
+    if (!validateMaterials()) {
+        isValid = false;
+        errorMessages.push('• Materiales (mínimo 2)');
+    }
+    
+    if (!validateDescription()) {
+        isValid = false;
+        errorMessages.push('• Descripción');
+    }
+    
+    // Validate code last (async)
+    if (!validateCodeSync()) {
+        isValid = false;
+        errorMessages.push('• Código del producto');
+    }
+    
+    // Focus on first error field if validation fails
+    if (!isValid) {
+        const firstErrorField = document.querySelector('.error');
+        if (firstErrorField) {
+            firstErrorField.focus();
+        }
+    }
     
     return isValid;
 }
 
-// Validate product code
-async function validateCode() {
+// Clear all field errors
+function clearAllFieldErrors() {
+    const errorElements = document.querySelectorAll('.error');
+    errorElements.forEach(element => {
+        element.textContent = '';
+    });
+    
+    const inputElements = document.querySelectorAll('input, select, textarea');
+    inputElements.forEach(element => {
+        element.classList.remove('error');
+    });
+}
+
+// Validate product code (sync version for form validation)
+function validateCodeSync() {
     const code = document.getElementById('code').value.trim();
     const errorElement = document.getElementById('code-error');
     const inputElement = document.getElementById('code');
@@ -285,63 +405,47 @@ async function validateCode() {
     inputElement.classList.remove('error');
     
     if (!code) {
-        showFieldError('code', 'El código es obligatorio');
+        alert('El código del producto no puede estar en blanco.');
         return false;
     }
     
     if (code.length < 5 || code.length > 15) {
-        showFieldError('code', 'El código debe tener entre 5 y 15 caracteres');
+        alert('El código del producto debe tener entre 5 y 15 caracteres.');
         return false;
     }
     
     if (!/^[A-Za-z0-9]+$/.test(code)) {
-        showFieldError('code', 'El código solo puede contener letras y números');
+        alert('El código del producto debe contener letras y números');
         return false;
     }
     
+    // Must contain at least one letter and one number; only alphanumeric
     if (!/[A-Za-z]/.test(code)) {
-        showFieldError('code', 'El código debe contener al menos una letra');
+        alert('El código del producto debe contener letras y números');
         return false;
     }
     
     if (!/[0-9]/.test(code)) {
-        showFieldError('code', 'El código debe contener al menos un número');
-        return false;
-    }
-    
-    // Check uniqueness in database
-    try {
-        const response = await fetch(`backend/check_code.php?code=${encodeURIComponent(code)}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            showFieldError('code', 'Error verificando código: ' + data.error);
-            return false;
-        }
-        
-        if (!data.available) {
-            showFieldError('code', 'Este código ya existe');
-            return false;
-        }
-    } catch (error) {
-        showFieldError('code', 'Error verificando código: ' + error.message);
+        alert('El código del producto debe contener letras y números');
         return false;
     }
     
     return true;
 }
 
+// Real-time validation removed - all validation now happens only on form submission
+
 // Validate product name
 function validateName() {
     const name = document.getElementById('name').value.trim();
     
     if (!name) {
-        showFieldError('name', 'El nombre es obligatorio');
+        alert('El nombre del producto no puede estar en blanco');
         return false;
     }
     
     if (name.length < 2 || name.length > 50) {
-        showFieldError('name', 'El nombre debe tener entre 2 y 50 caracteres');
+        alert('El nombre del producto debe tener entre 2 y 50 caracteres');
         return false;
     }
     
@@ -354,7 +458,7 @@ function validateWarehouse() {
     const warehouse = document.getElementById('warehouse').value;
     
     if (!warehouse) {
-        showFieldError('warehouse', 'Debe seleccionar una bodega');
+        alert('Debe seleccionar una bodega');
         return false;
     }
     
@@ -367,7 +471,7 @@ function validateBranch() {
     const branch = document.getElementById('branch').value;
     
     if (!branch) {
-        showFieldError('branch', 'Debe seleccionar una sucursal');
+        alert('Debe seleccionar una sucursal para la bodega seleccionada');
         return false;
     }
     
@@ -380,7 +484,7 @@ function validateCurrency() {
     const currency = document.getElementById('currency').value;
     
     if (!currency) {
-        showFieldError('currency', 'Debe seleccionar una moneda');
+        alert('Debe seleccionar una moneda para el producto');
         return false;
     }
     
@@ -393,19 +497,19 @@ function validatePrice() {
     const price = document.getElementById('price').value.trim();
     
     if (!price) {
-        showFieldError('price', 'El precio es obligatorio');
+        alert('El precio del producto no puede estar en blanco');
         return false;
     }
     
     const priceNum = parseFloat(price);
     
     if (isNaN(priceNum) || priceNum <= 0) {
-        showFieldError('price', 'El precio debe ser un número positivo');
+        alert('El precio del producto debe ser un número positivo con hasta dos decimales');
         return false;
     }
     
     if (!/^\d+(\.\d{1,2})?$/.test(price)) {
-        showFieldError('price', 'El precio debe tener máximo 2 decimales');
+        alert('El precio del producto debe ser un número positivo con hasta dos decimales');
         return false;
     }
     
@@ -418,7 +522,7 @@ function validateMaterials() {
     const selectedMaterials = document.querySelectorAll('input[name="materials"]:checked');
     
     if (selectedMaterials.length < 2) {
-        showFieldError('materials', 'Debe seleccionar al menos 2 materiales');
+        alert('Debe seleccionar al menos dos materiales para el producto');
         return false;
     }
     
@@ -431,12 +535,12 @@ function validateDescription() {
     const description = document.getElementById('description').value.trim();
     
     if (!description) {
-        showFieldError('description', 'La descripción es obligatoria');
+        alert('La descripción del producto no puede estar en blanco');
         return false;
     }
     
     if (description.length < 10 || description.length > 1000) {
-        showFieldError('description', 'La descripción debe tener entre 10 y 1000 caracteres');
+        alert('La descripción del producto debe tener entre 10 y 1000 caracteres');
         return false;
     }
     
@@ -449,8 +553,12 @@ function showFieldError(fieldName, message) {
     const errorElement = document.getElementById(`${fieldName}-error`);
     const inputElement = document.getElementById(fieldName);
     
-    errorElement.textContent = message;
-    inputElement.classList.add('error');
+    if (errorElement) {
+        errorElement.textContent = message;
+    }
+    if (inputElement) {
+        inputElement.classList.add('error');
+    }
 }
 
 // Clear field error
@@ -458,8 +566,12 @@ function clearFieldError(fieldName) {
     const errorElement = document.getElementById(`${fieldName}-error`);
     const inputElement = document.getElementById(fieldName);
     
-    errorElement.textContent = '';
-    inputElement.classList.remove('error');
+    if (errorElement) {
+        errorElement.textContent = '';
+    }
+    if (inputElement) {
+        inputElement.classList.remove('error');
+    }
 }
 
 // Show message

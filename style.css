@@ -91,19 +91,20 @@ select:disabled {
 }
 
 .checkbox-group {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
   margin-top: 10px;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .checkbox-item {
   display: flex;
   align-items: center;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #f9f9f9;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
 }
 
 .checkbox-item input[type="checkbox"] {
@@ -118,7 +119,10 @@ select:disabled {
 }
 
 button {
-  width: 100%;
+  width: 33.33%;
+  max-width: 300px;
+  margin: 0 auto;
+  display: block;
   padding: 12px;
   background-color: #1aab8a;
   color: white;
@@ -179,7 +183,5 @@ button:disabled {
     grid-template-columns: 1fr;
   }
   
-  .checkbox-group {
-    grid-template-columns: 1fr;
-  }
+  /* .checkbox-group keeps horizontal scroll on mobile */
 }
