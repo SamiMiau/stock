@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Productos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Registrar Producto</h1>
+
+    <form id="productForm">
+      <div class="form-grid">
+        <div class="form-col-left">
+          <div class="form-group">
+            <label for="code">Código del Producto *</label>
+            <input type="text" id="code" name="code" required>
+            <span class="error" id="code-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="warehouse">Bodega *</label>
+            <select id="warehouse" name="warehouse" required>
+              <option value=""></option>
+            </select>
+            <span class="error" id="warehouse-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="currency">Moneda *</label>
+            <select id="currency" name="currency" required>
+              <option value=""></option>
+            </select>
+            <span class="error" id="currency-error"></span>
+          </div>
+        </div>
+
+        <div class="form-col-right">
+          <div class="form-group">
+            <label for="name">Nombre del Producto *</label>
+            <input type="text" id="name" name="name" required>
+            <span class="error" id="name-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="branch">Sucursal *</label>
+            <select id="branch" name="branch" required disabled>
+              <option value=""></option>
+            </select>
+            <span class="error" id="branch-error"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="price">Precio *</label>
+            <input type="text" id="price" name="price" required>
+            <span class="error" id="price-error"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Material del Producto * (seleccione al menos 2)</label>
+        <div id="materials-container">
+          <span class="loading">Cargando materiales...</span>
+        </div>
+        <span class="error" id="materials-error"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Descripción del Producto *</label>
+        <textarea id="description" name="description" rows="4" required></textarea>
+        <span class="error" id="description-error"></span>
+      </div>
+
+      <button type="submit">Registrar Producto</button>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
