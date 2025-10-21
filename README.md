@@ -14,7 +14,7 @@ Un sistema web para el registro y gestión de productos con validaciones persona
 ## 🛠️ Requisitos del Sistema
 
 ### Software Necesario
-- **XAMPP** (Apache + PHP + MySQL/PostgreSQL)
+- **XAMPP** (Apache + PHP + PostgreSQL)
 - **PostgreSQL** 12 o superior
 - **PHP** 7.4 o superior
 - **Navegador web** moderno (Chrome, Firefox, Safari, Edge)
@@ -171,28 +171,6 @@ Acceder a Adminer: `http://localhost/stock/adminer.php`
 }
 ```
 
-## 🐛 Solución de Problemas
-
-### Error de Conexión a BD
-1. Verificar que PostgreSQL esté ejecutándose
-2. Revisar credenciales en `.env`
-3. Probar conexión: `http://localhost/stock/backend/test_connection.php`
-
-### Error 500 - Internal Server Error
-1. Verificar logs de Apache en XAMPP
-2. Revisar permisos de archivos
-3. Verificar sintaxis PHP
-
-### Validaciones No Funcionan
-1. Verificar que JavaScript esté habilitado
-2. Revisar consola del navegador (F12)
-3. Verificar que no hay errores en `script.js`
-
-### Datos No Se Guardan
-1. Verificar conexión a base de datos
-2. Revisar restricciones de la BD
-3. Verificar logs de PostgreSQL
-
 ## 📝 Notas de Desarrollo
 
 ### Validaciones
@@ -209,28 +187,3 @@ Acceder a Adminer: `http://localhost/stock/adminer.php`
 - Consultas optimizadas con índices
 - Validación de unicidad eficiente
 - Carga asíncrona de datos dependientes
-
-## 📄 Licencia
-
-Este proyecto es de uso interno y educativo.
-
-## 👥 Contribución
-
-Para contribuir al proyecto:
-1. Fork del repositorio
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
-
-## 📞 Soporte
-
-Para soporte técnico o consultas:
-- Revisar la sección de solución de problemas
-- Verificar logs de error
-- Contactar al equipo de desarrollo
-
----
-
-**Versión**: 1.0.0  
-**Última actualización**: Diciembre 2024

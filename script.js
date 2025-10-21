@@ -194,7 +194,6 @@ async function handleFormSubmit(e) {
 			return;
 		}
 		if (!uniqueData.available) {
-			showFieldError('code', 'Este código ya existe');
 			alert('El código del producto ya está registrado.');
 			const codeInput = document.getElementById('code');
 			if (codeInput) codeInput.focus();
@@ -237,7 +236,6 @@ async function handleFormSubmit(e) {
 			const errMsg = productResult.error || 'Error creando producto';
 			// If backend reports duplicate code, show the required alert and stop
 			if (/c[oó]digo ya existe/i.test(errMsg) || /duplicate key|unique constraint/i.test(errMsg)) {
-				showFieldError('code', 'Este código ya existe');
 				alert('El código del producto ya está registrado.');
 				return;
 			}
@@ -277,7 +275,6 @@ async function handleFormSubmit(e) {
 	} catch (error) {
 		console.error('Error:', error);
 		if (/c[oó]digo ya existe/i.test(error.message) || /duplicate key|unique constraint/i.test(error.message)) {
-			showFieldError('code', 'Este código ya existe');
 			alert('El código del producto ya está registrado.');
 		} else {
 			showMessage('Error: ' + error.message, 'error');
