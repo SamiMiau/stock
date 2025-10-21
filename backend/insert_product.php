@@ -13,6 +13,7 @@ $code = isset($data['code']) ? trim($data['code']) : '';
 $name = isset($data['name']) ? trim($data['name']) : '';
 $price = isset($data['price']) ? (float)$data['price'] : 0;
 $currencyId = isset($data['currency_id']) ? (int)$data['currency_id'] : 0;
+$description = isset($data['description']) ? trim($data['description']) : '';
 
 // Validaciones según la estructura de create_tables.sql
 $errors = [];
@@ -36,6 +37,11 @@ if ($name === '' || strlen($name) < 2 || strlen($name) > 50) {
 // price: > 0
 if (!is_numeric($price) || $price <= 0) {
     $errors[] = 'Precio inválido: debe ser mayor a 0';
+}
+
+// description: 10-1000 chars
+if ($description === '' || strlen($description) < 10 || strlen($description) > 1000) {
+    $errors[] = 'Descripción inválida: longitud entre 10 y 1000 caracteres';
 }
 
 if (!empty($errors)) {
@@ -65,12 +71,13 @@ try {
     }
 
     // Insertar en products; PostgreSQL permite RETURNING para obtener el id
-    $stmt = $pdo->prepare("INSERT INTO products (code, name, price, currency_id) VALUES (:code, :name, :price, :currency_id) RETURNING id, created_at");
+    $stmt = $pdo->prepare("INSERT INTO products (code, name, price, currency_id, description) VALUES (:code, :name, :price, :currency_id, :description) RETURNING id, created_at");
     $stmt->execute([
         ':code' => $code,
         ':name' => $name,
         ':price' => $price,
         ':currency_id' => $currencyId,
+        ':description' => $description,
     ]);
 
     $row = $stmt->fetch(PDO::FETCH_ASSOC);

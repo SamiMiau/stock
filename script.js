@@ -222,7 +222,8 @@ async function handleFormSubmit(e) {
                 code: formData.code,
                 name: formData.name,
                 price: formData.price,
-                currency_id: formData.currency
+                currency_id: formData.currency,
+                description: formData.description
             })
         });
         
